@@ -43,16 +43,6 @@ JSONValue signIn(in ClientConfig clientConfig, in string email, in string passwo
 
 /++
 +/
-class Auth {
-    public{
-    }//public
-
-    private{
-    }//private
-}//class Auth
-
-/++
-+/
 struct ClientConfig {
     public{
         this(in string url, in string id, in string secret){
@@ -78,6 +68,11 @@ struct ClientConfig {
 +/
 class Client {
     private alias This = typeof(this);
+    /++
+        +/
+    private enum Method {
+        GET, POST, DELETE, PATCH
+    }//enum Method
     public{
         this(in ClientConfig clientToken){
             _clientToken = clientToken;
@@ -88,12 +83,151 @@ class Client {
             return this;
         };
 
-        JSONValue request(){
+        JSONValue request(in Method method, in string endPoint, in JSONValue arg = null){
             auto http = HTTP(_clientToken.url);
             http.addRequestHeader("Authorization", "Bearer " ~ _userToken["access_token"].str);
-            string url = _clientToken.url ~ "/api/v1/timelines/home";
-            return get(url, http).parseJSON;
+            string url = _clientToken.url ~ endPoint;
+            JSONValue response;
+            switch (method) {
+                case Method.GET:
+                    response = get(url, http).parseJSON;
+                    break;
+                case Method.PATCH:
+                    response = patch(url, arg.str, http).parseJSON;
+                    break;
+                default:
+                    assert(false);
+            }
+            return response;
         }
+
+        ///
+        JSONValue account(in uint id){
+            return request(Method.GET, "/api/v1/accounts/" ~ id.to!string);
+        }
+
+        /// TODO accountVerify
+
+        /// TODO accountUpdateCredentials
+
+        /// TODO accountFollowers
+
+        /// TODO accountFollowing
+        // GET /api/v1/accounts/:id/following
+
+        /// TODO accountStatuses
+        // GET /api/v1/accounts/:id/statuses
+
+        /// TODO 
+        // GET /api/v1/accounts/:id/follow
+
+        /// TODO 
+        // GET /api/v1/accounts/:id/unfollow
+
+        /// TODO
+        // GET /api/v1/accounts/:id/block
+
+        /// TODO
+        // GET /api/v1/accounts/:id/unblock
+
+        /// TODO
+        // GET /api/v1/accounts/:id/mute
+
+        /// TODO
+        // GET /api/v1/accounts/:id/unmute
+
+        /// TODO
+        // GET /api/v1/accounts/relationships
+
+        /// TODO
+        // GET /api/v1/accounts/search
+
+        /// TODO
+        // GET /api/v1/blocks
+
+        /// TODO
+        // GET /api/v1/favourites
+
+        /// TODO
+        // GET /api/v1/follow_requests
+
+        /// TODO
+        // POST /api/v1/follow_requests/authorize
+
+        /// TODO
+        // POST /api/v1/follow_requests/reject
+
+        /// TODO
+        // POST /api/v1/follows
+
+        /// TODO
+        // GET /api/v1/instance
+
+        /// TODO
+        // POST /api/v1/media
+
+        /// TODO
+        // GET /api/v1/mutes
+
+        /// TODO
+        // GET /api/v1/notifications
+
+        /// TODO
+        // GET /api/v1/notifications/:id
+
+        /// TODO
+        // POST /api/v1/notifications/clear
+
+        /// TODO
+        // GET /api/v1/reports
+
+        /// TODO
+        // POST /api/v1/reports
+
+        /// TODO
+        // GET /api/v1/search
+
+        /// TODO
+        // GET /api/v1/statuses/:id
+
+        /// TODO
+        // GET /api/v1/statuses/:id/context
+
+        /// TODO
+        // GET /api/v1/statuses/:id/card
+
+        /// TODO
+        // GET /api/v1/statuses/:id/reblogged_by
+
+        /// TODO
+        // GET /api/v1/statuses/:id/favourited_by
+
+        /// TODO
+        // POST /api/v1/statuses
+
+        /// TODO
+        // DELETE /api/v1/statuses/:id
+
+        /// TODO
+        // POST /api/v1/statuses/:id/reblog
+
+        /// TODO
+        // POST /api/v1/statuses/:id/unreblog
+
+        /// TODO
+        // POST /api/v1/statuses/:id/favourite
+
+        /// TODO
+        // POST /api/v1/statuses/:id/unfavourite
+
+        /// TODO
+        //GET /api/v1/timelines/home
+
+        /// TODO
+        // GET /api/v1/timelines/public
+
+        /// TODO
+        // GET /api/v1/timelines/tag/:hashtag
     }//public
 
     private{
