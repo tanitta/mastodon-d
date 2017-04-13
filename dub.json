@@ -1,0 +1,10 @@
+{
+	"name": "mastodon-d",
+	"authors": [
+		"tanitta"
+	],
+	"description": "mastodon API Wrapper for dlang",
+	"copyright": "Copyright © 2017, tanitta",
+	"license": "proprietary", 
+    "targetType": "library"
+}
