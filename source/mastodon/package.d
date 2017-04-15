@@ -1,7 +1,7 @@
 module mastodon;
 
-import std.net.curl;
-import std.json;
+import std.net.curl:post, get, patch, HTTP;
+import std.json:JSONValue, parseJSON;
 import std.conv:to;
 
 // /++
@@ -101,13 +101,15 @@ ClientConfig createApp(in string url, in string clientName, in string scopes, in
 }
 
 ///
-JSONValue signIn(in string url, in string clientId, in string clientIdSeclet, in string email, in string password){
+JSONValue signIn(in string url, in string clientId, in string clientIdSeclet, in string email, in string password, in string scopes = "read write follow"){
     string[string] option = ["client_id" : clientId, 
                    "client_secret" : clientIdSeclet, 
                    "grant_type" : "password", 
                    "username" : email, 
-                   "password" : password,];
-    return post(url ~ "/oauth/token", option).parseJSON;
+                   "password" : password,
+                   "scope" : scopes];
+    auto response = post(url ~ "/oauth/token", option).parseJSON;
+    return response;
 }
 
 ///
@@ -170,14 +172,20 @@ class Client {
         JSONValue request(Method M, T)(in string endPoint, T arg = null){
             auto http = HTTP(_clientToken.url);
             http.addRequestHeader("Authorization", "Bearer " ~ _userToken["access_token"].str);
+            // http.handle.set(CurlOption.ssl_verifypeer, false);
             string url = _clientToken.url ~ endPoint;
             JSONValue response;
+
             static if(M == Method.GET){
                 response = get(url, http).parseJSON;
+            }
+            static if(M == Method.POST){
+                response = post(url, arg, http).parseJSON;
             }
             static if(M == Method.PATCH){
                 response = patch(url, arg, http).parseJSON;
             }
+        
             return response;
         }
 
@@ -190,45 +198,76 @@ class Client {
             return request!(Method.GET)("/api/v1/accounts/verify_credentials");
         }
 
-        // TODO Error 
-        // std.net.curl.CurlException@/usr/local/Cellar/dmd/2.074.0/include/dlang/dmd/std/net/curl.d(1060): 
-        // HTTP request returned status code 403 (Forbidden)
         // JSONValue updateAccountCredentials(in string arg){
-        //     return request!(Method.PATCH)("/api/v1/accounts/update_credentials", `{"display_name":"test"}`);
+        // TODO doesn't work
+        //     return request!(Method.PATCH)("/api/v1/accounts/update_credentials", arg);
         // }
 
-        /// TODO accountFollowers
-        // GET /api/v1/accounts/:id/followers
+        ///
+        JSONValue accountFollowers(in uint id){
+            return request!(Method.GET)("/api/v1/accounts/" ~ id.to!string ~ "/followers");
+        }
 
-        /// TODO accountFollowing
-        // GET /api/v1/accounts/:id/following
+        /// 
+        JSONValue accountFollowing(in uint id){
+            return request!(Method.GET)("/api/v1/accounts/" ~ id.to!string ~ "/following");
+        }
 
-        /// TODO accountStatuses
-        // GET /api/v1/accounts/:id/statuses
+        ///
+        JSONValue accountStatuses(in uint id){
+            return request!(Method.GET)("/api/v1/accounts/" ~ id.to!string ~ "/statuses");
+        }
 
-        /// TODO 
-        // GET /api/v1/accounts/:id/follow
+        ///
+        JSONValue followAccount(in uint id){
+            return request!(Method.GET)("/api/v1/accounts/" ~ id.to!string ~ "/follow");
+        }
 
-        /// TODO 
-        // GET /api/v1/accounts/:id/unfollow
+        ///
+        JSONValue unfollowAccount(in uint id){
+            return request!(Method.GET)("/api/v1/accounts/" ~ id.to!string ~ "/unfollow");
+        }
 
-        /// TODO
+        ///
         // GET /api/v1/accounts/:id/block
+        JSONValue blockAccount(in uint id){
+            return request!(Method.GET)("/api/v1/accounts/" ~ id.to!string ~ "/block");
+        }
 
-        /// TODO
-        // GET /api/v1/accounts/:id/unblock
+        ///
+        JSONValue unblockAccount(in uint id){
+            return request!(Method.GET)("/api/v1/accounts/" ~ id.to!string ~ "/unblock");
+        }
 
-        /// TODO
-        // GET /api/v1/accounts/:id/mute
+        ///
+        JSONValue muteAccount(in uint id){
+            return request!(Method.GET)("/api/v1/accounts/" ~ id.to!string ~ "/mute");
+        }
 
-        /// TODO
-        // GET /api/v1/accounts/:id/unmute
+        ///
+        JSONValue unmuteAccount(in uint id){
+            return request!(Method.GET)("/api/v1/accounts/" ~ id.to!string ~ "/unmute");
+        }
 
-        /// TODO
-        // GET /api/v1/accounts/relationships
+        /// 
+        JSONValue accountRelationships(in uint[] id...){
+            return accountRelationships(id);
+        }
 
-        /// TODO
-        // GET /api/v1/accounts/search
+        ///
+        JSONValue accountRelationships(in uint[] arr){
+            import std.algorithm:map;
+            import std.string:join;
+            import std.conv:to;
+            string qArray = arr.map!(e => "id[]=" ~ e.to!string).join("&");
+            return request!(Method.GET)("/api/v1/accounts/relationships/?" ~ qArray);
+        }
+
+        ///
+        JSONValue searchAccount(in string q, in uint limit = 40){
+            import std.conv:to;
+            return request!(Method.GET)("/api/v1/accounts/search/?q="~q~"&limit"~limit.to!string);
+        }
 
         /// TODO
         // GET /api/v1/blocks
@@ -291,7 +330,10 @@ class Client {
         // GET /api/v1/statuses/:id/favourited_by
 
         /// TODO
-        // POST /api/v1/statuses
+        JSONValue postStatuses(in string status){
+            string[string] arg = ["status" : status];
+            return request!(Method.POST)("/api/v1/statuses", arg);
+        }
 
         /// TODO
         // DELETE /api/v1/statuses/:id
