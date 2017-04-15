@@ -1,6 +1,6 @@
 module mastodon;
 
-import std.net.curl:HTTP, post, get, patch;
+import std.net.curl:HTTP, post, get, patch, del;
 import std.json:JSONValue, parseJSON;
 import std.conv:to;
 
@@ -100,6 +100,9 @@ class Client {
             }
             static if(M == Method.PATCH){
                 response = patch(url, arg, http).parseJSON;
+            }
+            static if(M == Method.DELETE){
+                del(url, http);
             }
         
             return response;
@@ -249,6 +252,11 @@ class Client {
 
         /// TODO
         // GET /api/v1/search
+        // JSONValue search(in string q, bool resolve = false){
+        //     import std.conv:to;
+        //     string qArray = "q="~q ~ resolve?"&resolve":"";
+        //     return request!(Method.GET)("/api/v1/search/?" ~ qArray);
+        // }
 
         ///
         JSONValue status(in uint id){
@@ -281,26 +289,42 @@ class Client {
             return request!(Method.GET)("/api/v1/statuses/" ~ id.to!string ~ "/favourited_by");
         }
 
-        /// TODO tweak args
-        JSONValue postStatuses(in string status){
+        /// TODO add params
+        JSONValue postStatus(in string status){
             string[string] arg = ["status" : status];
             return request!(Method.POST)("/api/v1/statuses", arg);
         }
 
         /// TODO
         // DELETE /api/v1/statuses/:id
+        JSONValue deleteStatus(in uint statusId){
+            import std.conv:to;
+            return request!(Method.DELETE)("/api/v1/statuses/"~statusId.to!string);
+        }
 
-        /// TODO
-        // POST /api/v1/statuses/:id/reblog
+        ///
+        JSONValue reblog(in uint statusId){
+            import std.conv:to;
+            return request!(Method.POST)("/api/v1/statuses/"~statusId.to!string~"/reblog");
+        }
 
-        /// TODO
-        // POST /api/v1/statuses/:id/unreblog
+        ///
+        JSONValue unreblog(in uint statusId){
+            import std.conv:to;
+            return request!(Method.POST)("/api/v1/statuses/"~statusId.to!string~"/unreblog");
+        }
 
-        /// TODO
-        // POST /api/v1/statuses/:id/favourite
+        ///
+        JSONValue favourite(in uint statusId){
+            import std.conv:to;
+            return request!(Method.POST)("/api/v1/statuses/"~statusId.to!string~"/favourite");
+        }
 
-        /// TODO
-        // POST /api/v1/statuses/:id/unfavourite
+        ///
+        JSONValue unfavourite(in uint statusId){
+            import std.conv:to;
+            return request!(Method.POST)("/api/v1/statuses/"~statusId.to!string~"/unfavourite");
+        }
 
         ///
         JSONValue timelineHome(){
