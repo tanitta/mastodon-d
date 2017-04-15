@@ -295,8 +295,7 @@ class Client {
             return request!(Method.POST)("/api/v1/statuses", arg);
         }
 
-        /// TODO
-        // DELETE /api/v1/statuses/:id
+        ///
         JSONValue deleteStatus(in uint statusId){
             import std.conv:to;
             return request!(Method.DELETE)("/api/v1/statuses/"~statusId.to!string);
