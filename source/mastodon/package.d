@@ -1,98 +1,14 @@
 module mastodon;
 
-import std.net.curl:post, get, patch, HTTP;
+import std.net.curl:HTTP, post, get, patch;
 import std.json:JSONValue, parseJSON;
 import std.conv:to;
 
-// /++
-// +/
-// struct Account {
-//     // TODO
-// }//struct Account
-//
-// /++
-// +/
-// struct Application {
-//     // TODO
-// }//struct Application
-//
-// /++
-// +/
-// struct Attachment {
-//     // TODO
-// }//struct Attachment
-//
-// /++
-// +/
-// struct Card {
-//     // TODO
-// }//struct Card
-//
-// /++
-// +/
-// struct Context {
-//     // TODO
-// }//struct Context
-//
-// /++
-// +/
-// struct Error {
-//     // TODO
-// }//struct Error
-//
-// /++
-// +/
-// struct Instance {
-//     // TODO
-// }//struct Instance
-//
-// /++
-// +/
-// struct Mention {
-//     // TODO
-// }//struct Mention
-//
-// /++
-// +/
-// struct Notification {
-//     // TODO
-// }//struct Notification
-//
-// /++
-// +/
-// struct Relationship {
-//     // TODO
-// }//struct Relationship
-//
-// /++
-// +/
-// struct Report {
-//     // TODO
-// }//struct Report
-//
-// /++
-// +/
-// struct Result {
-//     // TODO
-// }//struct Result
-//
-// /++
-// +/
-// struct Status {
-//     // TODO
-// }//struct Status
-//
-// /++
-// +/
-// struct Tag {
-//     // TODO
-// }//struct Tag
-
 ///
 ClientConfig createApp(in string url, in string clientName, in string scopes, in string redirectUris = "urn:ietf:wg:oauth:2.0:oob"){
-    auto res = post(url ~ "/api/v1/apps", [ "client_name" : clientName,
-                                               "redirect_uris" : redirectUris,
-                                               "scope" : scopes]).parseJSON;
+    auto res = post(url ~ "/api/v1/apps", [ "client_name"   : clientName,
+                                            "redirect_uris" : redirectUris,
+                                            "scope"         : scopes]).parseJSON;
     auto result = ClientConfig();
     result.url = url;
     result.id = res["client_id"].str;
@@ -269,14 +185,20 @@ class Client {
             return request!(Method.GET)("/api/v1/accounts/search/?q="~q~"&limit"~limit.to!string);
         }
 
-        /// TODO
-        // GET /api/v1/blocks
+        ///
+        JSONValue blocks(){
+            return request!(Method.GET)("/api/v1/blocks");
+        }
 
-        /// TODO
-        // GET /api/v1/favourites
+        ///
+        JSONValue favourites(){
+            return request!(Method.GET)("/api/v1/favourites");
+        }
 
-        /// TODO
-        // GET /api/v1/follow_requests
+        ///
+        JSONValue followRequests(){
+            return request!(Method.GET)("/api/v1/follow_requests");
+        }
 
         /// TODO
         // POST /api/v1/follow_requests/authorize
@@ -287,26 +209,40 @@ class Client {
         /// TODO
         // POST /api/v1/follows
 
-        /// TODO
-        // GET /api/v1/instance
+        ///
+        JSONValue instance(){
+            return request!(Method.GET)("/api/v1/instance");
+        }
 
         /// TODO
         // POST /api/v1/media
 
-        /// TODO
-        // GET /api/v1/mutes
+        ///
+        JSONValue mutes(){
+            return request!(Method.GET)("/api/v1/mutes");
+        }
 
-        /// TODO
-        // GET /api/v1/notifications
+        ///
+        JSONValue notifications(){
+            return request!(Method.GET)("/api/v1/notifications");
+        }
 
-        /// TODO
-        // GET /api/v1/notifications/:id
+        ///
+        JSONValue notifications(in uint id){
+            import std.conv:to;
+            return request!(Method.GET)("/api/v1/notifications/" ~ id.to!string);
+        }
 
-        /// TODO
-        // POST /api/v1/notifications/clear
+        ///
+        JSONValue clearNotifications(){
+            import std.conv:to;
+            return request!(Method.GET)("/api/v1/notifications/clear");
+        }
 
-        /// TODO
-        // GET /api/v1/reports
+        ///
+        JSONValue reports(){
+            return request!(Method.GET)("/api/v1/reports");
+        }
 
         /// TODO
         // POST /api/v1/reports
@@ -314,22 +250,38 @@ class Client {
         /// TODO
         // GET /api/v1/search
 
-        /// TODO
-        // GET /api/v1/statuses/:id
+        ///
+        JSONValue status(in uint id){
+            import std.conv:to;
+            return request!(Method.GET)("/api/v1/statuses/" ~ id.to!string);
+        }
 
-        /// TODO
-        // GET /api/v1/statuses/:id/context
+        ///
+        JSONValue statusContext(in uint id){
+            import std.conv:to;
+            return request!(Method.GET)("/api/v1/statuses/" ~ id.to!string ~ "/context");
+        }
 
-        /// TODO
-        // GET /api/v1/statuses/:id/card
+        ///
+        JSONValue statusCard(in uint id){
+            import std.conv:to;
+            return request!(Method.GET)("/api/v1/statuses/" ~ id.to!string ~ "/card");
+        }
 
-        /// TODO
-        // GET /api/v1/statuses/:id/reblogged_by
+        ///
+        JSONValue rebloggedBy(in uint id){
+            import std.conv:to;
+            return request!(Method.GET)("/api/v1/statuses/" ~ id.to!string ~ "/reblogged_by");
+        }
 
-        /// TODO
-        // GET /api/v1/statuses/:id/favourited_by
 
-        /// TODO
+        ///
+        JSONValue favouritedBy(in uint id){
+            import std.conv:to;
+            return request!(Method.GET)("/api/v1/statuses/" ~ id.to!string ~ "/favourited_by");
+        }
+
+        /// TODO tweak args
         JSONValue postStatuses(in string status){
             string[string] arg = ["status" : status];
             return request!(Method.POST)("/api/v1/statuses", arg);
@@ -371,3 +323,87 @@ class Client {
         JSONValue _userToken;
     }//private
 }//class Client
+
+// /++
+// +/
+// struct Account {
+//     // TODO
+// }//struct Account
+//
+// /++
+// +/
+// struct Application {
+//     // TODO
+// }//struct Application
+//
+// /++
+// +/
+// struct Attachment {
+//     // TODO
+// }//struct Attachment
+//
+// /++
+// +/
+// struct Card {
+//     // TODO
+// }//struct Card
+//
+// /++
+// +/
+// struct Context {
+//     // TODO
+// }//struct Context
+//
+// /++
+// +/
+// struct Error {
+//     // TODO
+// }//struct Error
+//
+// /++
+// +/
+// struct Instance {
+//     // TODO
+// }//struct Instance
+//
+// /++
+// +/
+// struct Mention {
+//     // TODO
+// }//struct Mention
+//
+// /++
+// +/
+// struct Notification {
+//     // TODO
+// }//struct Notification
+//
+// /++
+// +/
+// struct Relationship {
+//     // TODO
+// }//struct Relationship
+//
+// /++
+// +/
+// struct Report {
+//     // TODO
+// }//struct Report
+//
+// /++
+// +/
+// struct Result {
+//     // TODO
+// }//struct Result
+//
+// /++
+// +/
+// struct Status {
+//     // TODO
+// }//struct Status
+//
+// /++
+// +/
+// struct Tag {
+//     // TODO
+// }//struct Tag
