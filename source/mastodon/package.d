@@ -177,14 +177,12 @@ class Client {
         JSONValue accountRelationships(in uint[] arr){
             import std.algorithm:map;
             import std.string:join;
-            import std.conv:to;
             string qArray = arr.map!(e => "id[]=" ~ e.to!string).join("&");
             return request!(Method.GET)("/api/v1/accounts/relationships/?" ~ qArray);
         }
 
         ///
         JSONValue searchAccount(in string q, in uint limit = 40){
-            import std.conv:to;
             return request!(Method.GET)("/api/v1/accounts/search/?q="~q~"&limit"~limit.to!string);
         }
 
@@ -203,14 +201,20 @@ class Client {
             return request!(Method.GET)("/api/v1/follow_requests");
         }
 
-        /// TODO
-        // POST /api/v1/follow_requests/authorize
+        ///
+        JSONValue authorizeFollowRequest(in uint id){
+            return request!(Method.POST)("/api/v1/follow_requests/authorize", ["id":id.to!string]);
+        }
 
-        /// TODO
-        // POST /api/v1/follow_requests/reject
+        ///
+        JSONValue rejectFollowRequest(in uint id){
+            return request!(Method.POST)("/api/v1/follow_requests/reject", ["id":id.to!string]);
+        }
 
-        /// TODO
-        // POST /api/v1/follows
+        ///
+        JSONValue followRemoteUser(in string uri){
+            return request!(Method.POST)("/api/v1/follows", ["uri":uri.to!string]);
+        }
 
         ///
         JSONValue instance(){
@@ -232,13 +236,11 @@ class Client {
 
         ///
         JSONValue notifications(in uint id){
-            import std.conv:to;
             return request!(Method.GET)("/api/v1/notifications/" ~ id.to!string);
         }
 
         ///
         JSONValue clearNotifications(){
-            import std.conv:to;
             return request!(Method.GET)("/api/v1/notifications/clear");
         }
 
@@ -260,32 +262,27 @@ class Client {
 
         ///
         JSONValue status(in uint id){
-            import std.conv:to;
             return request!(Method.GET)("/api/v1/statuses/" ~ id.to!string);
         }
 
         ///
         JSONValue statusContext(in uint id){
-            import std.conv:to;
             return request!(Method.GET)("/api/v1/statuses/" ~ id.to!string ~ "/context");
         }
 
         ///
         JSONValue statusCard(in uint id){
-            import std.conv:to;
             return request!(Method.GET)("/api/v1/statuses/" ~ id.to!string ~ "/card");
         }
 
         ///
         JSONValue rebloggedBy(in uint id){
-            import std.conv:to;
             return request!(Method.GET)("/api/v1/statuses/" ~ id.to!string ~ "/reblogged_by");
         }
 
 
         ///
         JSONValue favouritedBy(in uint id){
-            import std.conv:to;
             return request!(Method.GET)("/api/v1/statuses/" ~ id.to!string ~ "/favourited_by");
         }
 
@@ -297,31 +294,26 @@ class Client {
 
         ///
         JSONValue deleteStatus(in uint statusId){
-            import std.conv:to;
             return request!(Method.DELETE)("/api/v1/statuses/"~statusId.to!string);
         }
 
         ///
         JSONValue reblog(in uint statusId){
-            import std.conv:to;
             return request!(Method.POST)("/api/v1/statuses/"~statusId.to!string~"/reblog");
         }
 
         ///
         JSONValue unreblog(in uint statusId){
-            import std.conv:to;
             return request!(Method.POST)("/api/v1/statuses/"~statusId.to!string~"/unreblog");
         }
 
         ///
         JSONValue favourite(in uint statusId){
-            import std.conv:to;
             return request!(Method.POST)("/api/v1/statuses/"~statusId.to!string~"/favourite");
         }
 
         ///
         JSONValue unfavourite(in uint statusId){
-            import std.conv:to;
             return request!(Method.POST)("/api/v1/statuses/"~statusId.to!string~"/unfavourite");
         }
 
