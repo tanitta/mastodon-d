@@ -4,6 +4,90 @@ import std.net.curl;
 import std.json;
 import std.conv:to;
 
+// /++
+// +/
+// struct Account {
+//     // TODO
+// }//struct Account
+//
+// /++
+// +/
+// struct Application {
+//     // TODO
+// }//struct Application
+//
+// /++
+// +/
+// struct Attachment {
+//     // TODO
+// }//struct Attachment
+//
+// /++
+// +/
+// struct Card {
+//     // TODO
+// }//struct Card
+//
+// /++
+// +/
+// struct Context {
+//     // TODO
+// }//struct Context
+//
+// /++
+// +/
+// struct Error {
+//     // TODO
+// }//struct Error
+//
+// /++
+// +/
+// struct Instance {
+//     // TODO
+// }//struct Instance
+//
+// /++
+// +/
+// struct Mention {
+//     // TODO
+// }//struct Mention
+//
+// /++
+// +/
+// struct Notification {
+//     // TODO
+// }//struct Notification
+//
+// /++
+// +/
+// struct Relationship {
+//     // TODO
+// }//struct Relationship
+//
+// /++
+// +/
+// struct Report {
+//     // TODO
+// }//struct Report
+//
+// /++
+// +/
+// struct Result {
+//     // TODO
+// }//struct Result
+//
+// /++
+// +/
+// struct Status {
+//     // TODO
+// }//struct Status
+//
+// /++
+// +/
+// struct Tag {
+//     // TODO
+// }//struct Tag
+
 ///
 ClientConfig createApp(in string url, in string clientName, in string scopes, in string redirectUris = "urn:ietf:wg:oauth:2.0:oob"){
     auto res = post(url ~ "/api/v1/apps", [ "client_name" : clientName,
@@ -83,34 +167,38 @@ class Client {
             return this;
         };
 
-        JSONValue request(in Method method, in string endPoint, in JSONValue arg = null){
+        JSONValue request(Method M, T)(in string endPoint, T arg = null){
             auto http = HTTP(_clientToken.url);
             http.addRequestHeader("Authorization", "Bearer " ~ _userToken["access_token"].str);
             string url = _clientToken.url ~ endPoint;
             JSONValue response;
-            switch (method) {
-                case Method.GET:
-                    response = get(url, http).parseJSON;
-                    break;
-                case Method.PATCH:
-                    response = patch(url, arg.str, http).parseJSON;
-                    break;
-                default:
-                    assert(false);
+            static if(M == Method.GET){
+                response = get(url, http).parseJSON;
+            }
+            static if(M == Method.PATCH){
+                response = patch(url, arg, http).parseJSON;
             }
             return response;
         }
 
         ///
         JSONValue account(in uint id){
-            return request(Method.GET, "/api/v1/accounts/" ~ id.to!string);
+            return request!(Method.GET)("/api/v1/accounts/" ~ id.to!string);
         }
 
-        /// TODO accountVerify
+        JSONValue verifyAccountCredentials(){
+            return request!(Method.GET)("/api/v1/accounts/verify_credentials");
+        }
 
-        /// TODO accountUpdateCredentials
+        // TODO Error 
+        // std.net.curl.CurlException@/usr/local/Cellar/dmd/2.074.0/include/dlang/dmd/std/net/curl.d(1060): 
+        // HTTP request returned status code 403 (Forbidden)
+        // JSONValue updateAccountCredentials(in string arg){
+        //     return request!(Method.PATCH)("/api/v1/accounts/update_credentials", `{"display_name":"test"}`);
+        // }
 
         /// TODO accountFollowers
+        // GET /api/v1/accounts/:id/followers
 
         /// TODO accountFollowing
         // GET /api/v1/accounts/:id/following
@@ -220,14 +308,20 @@ class Client {
         /// TODO
         // POST /api/v1/statuses/:id/unfavourite
 
-        /// TODO
-        //GET /api/v1/timelines/home
+        ///
+        JSONValue timelineHome(){
+            return request!(Method.GET)("/api/v1/timelines/home");
+        }
 
-        /// TODO
-        // GET /api/v1/timelines/public
+        ///
+        JSONValue timelinePublic(){
+            return request!(Method.GET)("/api/v1/timelines/public");
+        }
 
-        /// TODO
-        // GET /api/v1/timelines/tag/:hashtag
+        ///
+        JSONValue timelineHashtag(in string tag){
+            return request!(Method.GET)("/api/v1/timelines/tag/" ~ tag);
+        }
     }//public
 
     private{
