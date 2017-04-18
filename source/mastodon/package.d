@@ -1,6 +1,7 @@
 module mastodon;
 
-import std.net.curl:HTTP, post, get, patch, del;
+// import std.net.curl:HTTP, post, get, patch, del, No;
+import std.net.curl;
 import std.json:JSONValue, parseJSON;
 import std.conv:to;
 
@@ -39,10 +40,6 @@ JSONValue signIn(in ClientConfig clientConfig, in string email, in string passwo
     return signIn(clientConfig.url, clientConfig.id, clientConfig.secret, email, password);
 }
 
-//TODO
-// auto signInAndSaveTokens(in string clientId, in string clientIdSeclet, in string config, in string email, in string password, in string path){
-// }
-
 /++
 +/
 struct ClientConfig {
@@ -65,6 +62,14 @@ struct ClientConfig {
     private{
     }//private
 }//struct ClientConfig
+
+/++
++/
+enum StreamingType {
+    User   = "user",
+    Public = "public",
+    Hashta = "hashtag"
+}//enum StreamingType
 
 /++
 +/
@@ -117,10 +122,10 @@ class Client {
             return request!(Method.GET)("/api/v1/accounts/verify_credentials");
         }
 
-        // JSONValue updateAccountCredentials(in string arg){
+        JSONValue updateAccountCredentials(in string arg){
         // TODO doesn't work
-        //     return request!(Method.PATCH)("/api/v1/accounts/update_credentials", arg);
-        // }
+            return request!(Method.PATCH)("/api/v1/accounts/update_credentials", arg);
+        }
 
         ///
         JSONValue accountFollowers(in uint id){
@@ -139,33 +144,33 @@ class Client {
 
         ///
         JSONValue followAccount(in uint id){
-            return request!(Method.GET)("/api/v1/accounts/" ~ id.to!string ~ "/follow");
+            return request!(Method.POST)("/api/v1/accounts/" ~ id.to!string ~ "/follow");
         }
 
         ///
         JSONValue unfollowAccount(in uint id){
-            return request!(Method.GET)("/api/v1/accounts/" ~ id.to!string ~ "/unfollow");
+            return request!(Method.POST)("/api/v1/accounts/" ~ id.to!string ~ "/unfollow");
         }
 
         ///
         // GET /api/v1/accounts/:id/block
         JSONValue blockAccount(in uint id){
-            return request!(Method.GET)("/api/v1/accounts/" ~ id.to!string ~ "/block");
+            return request!(Method.POST)("/api/v1/accounts/" ~ id.to!string ~ "/block");
         }
 
         ///
         JSONValue unblockAccount(in uint id){
-            return request!(Method.GET)("/api/v1/accounts/" ~ id.to!string ~ "/unblock");
+            return request!(Method.POST)("/api/v1/accounts/" ~ id.to!string ~ "/unblock");
         }
 
         ///
         JSONValue muteAccount(in uint id){
-            return request!(Method.GET)("/api/v1/accounts/" ~ id.to!string ~ "/mute");
+            return request!(Method.POST)("/api/v1/accounts/" ~ id.to!string ~ "/mute");
         }
 
         ///
         JSONValue unmuteAccount(in uint id){
-            return request!(Method.GET)("/api/v1/accounts/" ~ id.to!string ~ "/unmute");
+            return request!(Method.POST)("/api/v1/accounts/" ~ id.to!string ~ "/unmute");
         }
 
         /// 
@@ -331,6 +336,22 @@ class Client {
         JSONValue timelineHashtag(in string tag){
             return request!(Method.GET)("/api/v1/timelines/tag/" ~ tag);
         }
+
+        // auto stream(in StreamingType type){
+        //     import std.net.curl;
+        //     auto http = HTTP(_clientToken.url);
+        //     http.addRequestHeader("Authorization", "Bearer " ~ _userToken["access_token"].str);
+        //     http.method = HTTP.Method.get;
+        //     string url = _clientToken.url ~ "/api/v1/streaming/" ~ type;
+        //     auto stream = byLineAsync(
+        //             url, 
+        //             No.keepTerminator,
+        //             '\x0a', 
+        //             10, 
+        //             http
+        //             ); 
+        //     return stream;
+        // }
     }//public
 
     private{
@@ -422,3 +443,4 @@ class Client {
 // struct Tag {
 //     // TODO
 // }//struct Tag
+
