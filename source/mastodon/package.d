@@ -1,6 +1,7 @@
 module mastodon;
 
-import std.net.curl:HTTP, post, get, patch, del;
+// import std.net.curl:HTTP, post, get, patch, del, No;
+import std.net.curl;
 import std.json:JSONValue, parseJSON;
 import std.conv:to;
 
@@ -39,10 +40,6 @@ JSONValue signIn(in ClientConfig clientConfig, in string email, in string passwo
     return signIn(clientConfig.url, clientConfig.id, clientConfig.secret, email, password);
 }
 
-//TODO
-// auto signInAndSaveTokens(in string clientId, in string clientIdSeclet, in string config, in string email, in string password, in string path){
-// }
-
 /++
 +/
 struct ClientConfig {
@@ -65,6 +62,14 @@ struct ClientConfig {
     private{
     }//private
 }//struct ClientConfig
+
+/++
++/
+enum StreamingType {
+    User   = "user",
+    Public = "public",
+    Hashta = "hashtag"
+}//enum StreamingType
 
 /++
 +/
@@ -117,10 +122,10 @@ class Client {
             return request!(Method.GET)("/api/v1/accounts/verify_credentials");
         }
 
-        // JSONValue updateAccountCredentials(in string arg){
+        JSONValue updateAccountCredentials(in string arg){
         // TODO doesn't work
-        //     return request!(Method.PATCH)("/api/v1/accounts/update_credentials", arg);
-        // }
+            return request!(Method.PATCH)("/api/v1/accounts/update_credentials", arg);
+        }
 
         ///
         JSONValue accountFollowers(in uint id){
@@ -139,33 +144,33 @@ class Client {
 
         ///
         JSONValue followAccount(in uint id){
-            return request!(Method.GET)("/api/v1/accounts/" ~ id.to!string ~ "/follow");
+            return request!(Method.POST)("/api/v1/accounts/" ~ id.to!string ~ "/follow");
         }
 
         ///
         JSONValue unfollowAccount(in uint id){
-            return request!(Method.GET)("/api/v1/accounts/" ~ id.to!string ~ "/unfollow");
+            return request!(Method.POST)("/api/v1/accounts/" ~ id.to!string ~ "/unfollow");
         }
 
         ///
         // GET /api/v1/accounts/:id/block
         JSONValue blockAccount(in uint id){
-            return request!(Method.GET)("/api/v1/accounts/" ~ id.to!string ~ "/block");
+            return request!(Method.POST)("/api/v1/accounts/" ~ id.to!string ~ "/block");
         }
 
         ///
         JSONValue unblockAccount(in uint id){
-            return request!(Method.GET)("/api/v1/accounts/" ~ id.to!string ~ "/unblock");
+            return request!(Method.POST)("/api/v1/accounts/" ~ id.to!string ~ "/unblock");
         }
 
         ///
         JSONValue muteAccount(in uint id){
-            return request!(Method.GET)("/api/v1/accounts/" ~ id.to!string ~ "/mute");
+            return request!(Method.POST)("/api/v1/accounts/" ~ id.to!string ~ "/mute");
         }
 
         ///
         JSONValue unmuteAccount(in uint id){
-            return request!(Method.GET)("/api/v1/accounts/" ~ id.to!string ~ "/unmute");
+            return request!(Method.POST)("/api/v1/accounts/" ~ id.to!string ~ "/unmute");
         }
 
         /// 
@@ -331,13 +336,116 @@ class Client {
         JSONValue timelineHashtag(in string tag){
             return request!(Method.GET)("/api/v1/timelines/tag/" ~ tag);
         }
+
+        ///
+        auto stream(in StreamingType type){
+            import std.net.curl;
+            auto http = HTTP(_clientToken.url);
+            http.addRequestHeader("Authorization", "Bearer " ~ _userToken["access_token"].str);
+            http.method = HTTP.Method.get;
+            string url = _clientToken.url ~ "/api/v1/streaming/" ~ type;
+            auto stream = byLineAsync(
+                    url, 
+                    No.keepTerminator,
+                    '\x0a', 
+                    10, 
+                    http
+                    ); 
+
+            import std.algorithm:filter, map;
+            string lastLineType;
+            string lastEventType;
+            foreach (e; stream.filter!"a.length != 0") {
+                import std.json;
+                import std.stdio;
+                if(e[0..6] == "event:"){
+                    lastLineType = "event";
+                    lastEventType = e[7..$].to!string;
+                }else{
+                    if(lastLineType == "event"){
+                        switch (lastEventType){
+                            case "update":
+                                "################".writeln;
+                                e[6..$].parseJSON(JSONOptions.none)["content"].writeln;
+                                "################".writeln;
+                                break;
+                            case "delete":
+                                //TODO
+                                break;
+                            case "notification":
+                                //TODO
+                                break;
+                            default:
+                                //TODO
+                                break;
+                        }
+                    }
+                    lastLineType = "data";
+                }
+            }
+            // return stream;
+        }
+
+        ///
+        // void startStreaming(in StreamingType type){
+        //     string url = _clientToken.url ~ "/api/v1/streaming/" ~ type;
+        //     import std.stdio;
+        //     url.writeln;
+        //     _streams[type] = new Stream(url, _userToken["access_token"].str);
+        //     // _streams[type].addRequestHeader("Authorization", "Bearer " ~ _userToken["access_token"].str);
+        //     // _streams[type].method = HTTP.Method.get;
+        //
+        //     // return request!(Method.GET)("/api/v1/streaming/user");
+        // }
+
+        ///
+        // JSONValue[] streaming(in StreamingType type){
+        // }
     }//public
 
     private{
         ClientConfig _clientToken;
         JSONValue _userToken;
+        Stream[StreamingType] _streams;
+
     }//private
 }//class Client
+
+/++
++/
+private class Stream {
+    // public{
+    //     this(in string url, in string accessToken){
+    //         auto http = HTTP(url);
+    //         http.addRequestHeader("Authorization", "Bearer " ~ accessToken);
+    //         http.method = HTTP.Method.get;
+    //         _http = &http;
+    //         _url = url;
+    //         // _http.addRequestHeader("Authorization", "Bearer " ~ accessToken);
+    //         // _http.method = HTTP.Method.get;
+    //     }
+    //
+    //     start(){
+    //         _stream = byLineAsync(_url); 
+    //     }
+    //
+    //     JSONValue[] pop(){
+    //         JSONValue[] events;
+    //         foreach (e; _stream) {
+    //             events = e.parseJSON;
+    //         }
+    //         _stream = [];
+    //         return events;
+    //     }
+    // }//public
+    //
+    // private{
+    //     HTTP* _http;
+    //     string _url;
+    //     char[] _stream;
+    //
+    // }//private
+}//class Streamk
 
 // /++
 // +/
